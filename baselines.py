@@ -1,0 +1,329 @@
+import os
+import re
+import codecs
+import numpy as np
+from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import classification_report
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegressionCV
+from sklearn.feature_extraction.text import CountVectorizer
+
+
+DATA_BASE_DIR = 'datasets'
+
+
+def read_movie_reviews(data_dir='movie_reviews'):
+    with codecs.open(os.path.join(os.getcwd(),
+                                  DATA_BASE_DIR,
+                                  data_dir,
+                                  'mr-polarity.neg'),
+                     'r',
+                     encoding='utf-8',
+                     errors='ignore') as f:
+        Xn_text = f.read().splitlines()
+    with codecs.open(os.path.join(os.getcwd(),
+                                  DATA_BASE_DIR,
+                                  data_dir,
+                                  'mr-polarity.pos'),
+                     'r',
+                     encoding='utf-8',
+                     errors='ignore') as f:
+        Xp_text = f.read().splitlines()
+
+    X = []
+    X.extend(Xn_text)
+    X.extend(Xp_text)
+
+    yn = np.zeros(len(Xn_text), dtype=np.int64)
+    yp = np.ones (len(Xp_text), dtype=np.int64)
+    y  = np.append(yn, yp)
+
+    return X, y
+
+
+def read_customer_reviews(data_dir='customer_reviews'):
+    positives = []
+    negatives = []
+    mixed = []
+
+    for filename in os.listdir(os.path.join(os.getcwd(), data_dir)):
+        with codecs.open(os.path.join(os.getcwd(),
+                                      DATA_BASE_DIR,
+                                      data_dir,
+                                      filename),
+                         'r',
+                         encoding='utf-8',
+                         errors='ignore') as f:
+            for l in f:
+                if re.search(r"\[\+.\]", l) is not None:
+                    if re.search(r"\[\-.\]", l) is not None:
+                        mixed.append(l[(l.index('##') + 2):].strip())
+                    else:
+                        positives.append(l[(l.index('##') + 2):].strip())
+                elif re.search(r"\[\-.\]", l) is not None:
+                    negatives.append(l[(l.index('##') + 2):].strip())
+
+    X = []
+    X.extend(negatives)
+    X.extend(positives)
+
+    yn = np.zeros(len(negatives), dtype=np.int64)
+    yp = np.ones (len(positives), dtype=np.int64)
+    y  = np.append(yn, yp)
+
+    return X, y
+
+
+def read_mpqa(data_dir='mpqa'):
+    positives = []
+    negatives = []
+
+    doclist_files = ['doclist.mpqaOriginalSubset',
+                     'doclist.opqaSubset',
+                     'doclist.ula-luSubset',
+                     'doclist.ulaSubset',
+                     'doclist.xbankSubset']
+
+    for doclist in doclist_files:
+        with open(os.path.join(os.getcwd(), data_dir, doclist), 'r') as opqa_files:
+            for opqa_file_path in opqa_files:
+                with open(os.path.join(os.getcwd(),
+                                       DATA_BASE_DIR,
+                                       data_dir,
+                                       'man_anns',
+                                       opqa_file_path.strip(),
+                                       'gateman.mpqa.lre.2.0'),
+                          'r') as annotation_file:
+                    with codecs.open(os.path.join(os.getcwd(),
+                                                  DATA_BASE_DIR,
+                                                  data_dir,
+                                                  'docs',
+                                                  opqa_file_path.strip()),
+                                     'r',
+                                     encoding='utf-8',
+                                     errors='ignore') as doc:
+                        for l in annotation_file:
+                            if not l.lstrip().startswith('#'):
+                                fields = l.split('\t')
+                                assert len(fields) == 5
+                                if fields[3] == 'GATE_expressive-subjectivity':
+                                    intensity = re.search(r'intensity\s*=\s*"(.*?)"', fields[4])
+                                    if intensity is not None and intensity.group(1) not in ['low', 'neutral']:
+                                        # Subjective phrase
+                                        polarity = re.search(r'polarity\s*=\s*"(.*?)"', fields[4])
+                                        if polarity is None or not polarity.group(1):
+                                            continue
+                                        span = fields[1].split(',')
+                                        assert len(span) == 2
+                                        # Do not consider empty strings
+                                        if span[0] == span[1]:
+                                            continue
+                                        doc.seek(int(span[0]))
+                                        phrase = re.sub(r'\s+', ' ', doc.read(int(span[1]) - int(span[0])))
+                                        if polarity.group(1) == 'positive':
+                                            positives.append(phrase)
+                                        elif polarity.group(1) == 'negative':
+                                            negatives.append(phrase)
+                                        continue
+
+                                # Other condition for subjectivity
+                                elif fields[3] == 'GATE_direct-subjective':
+                                    intensity = re.search(r"intensity\s*=\s*\"(.*?)\"", fields[4])
+                                    if intensity is not None and intensity.group(1) not in ['low', 'neutral']:
+                                        insubstantial = re.search(r'insubstantial\s*=\s*"(.*?)"', fields[4])
+                                        if insubstantial is None:
+                                            # Subjective phrase
+                                            polarity = re.search(r'polarity\s*=\s*"(.*?)"', fields[4])
+                                            if polarity is None or not polarity.group(1):
+                                                continue
+                                            span = fields[1].split(',')
+                                            assert len(span) == 2
+                                            # Do not consider empty strings
+                                            if span[0] == span[1]:
+                                                continue
+                                            doc.seek(int(span[0]))
+                                            phrase = re.sub(r'\s+', ' ', doc.read(int(span[1]) - int(span[0])))
+                                            if polarity.group(1) == 'positive':
+                                                positives.append(phrase)
+                                            elif polarity.group(1) == 'negative':
+                                                negatives.append(phrase)
+
+    X = []
+    X.extend(negatives)
+    X.extend(positives)
+
+    yn = np.zeros(len(negatives), dtype=np.int64)
+    yp = np.ones (len(positives), dtype=np.int64)
+    y  = np.append(yn, yp)
+
+    return X, y
+
+
+def pre_process(X, y):
+    bow = CountVectorizer()
+    X_bow = bow.fit_transform(X)
+
+    X_train, X_test, y_train, y_test = train_test_split(X_bow,
+                                                        y,
+                                                        test_size=0.2,
+                                                        shuffle=True,
+                                                        random_state=42)
+
+    return X_train, X_test, y_train, y_test
+
+
+def cross_validation(model, parameters, X_train, X_test, y_train, y_test):
+    clf = GridSearchCV(model, parameters, cv=10, refit=True)
+    clf.fit(X_train, y_train)
+
+    print("Best result:")
+    print()
+    print("{0:0.3f} for {1}".format(clf.best_score_, clf.best_params_))
+    print()
+    print("Grid scores:")
+    print()
+    means = clf.cv_results_['mean_test_score']
+    stds = clf.cv_results_['std_test_score']
+    for mean, std, params in zip(means, stds, clf.cv_results_['params']):
+        print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
+    print()
+    print("Detailed report:")
+    print()
+    y_true, y_pred = y_test, clf.predict(X_test)
+    print(classification_report(y_true, y_pred))
+
+    return clf.best_estimator_
+
+
+def logistic_regression(X_train, X_test, y_train, y_test):
+
+    # Logistic Regression with built-in Cross-Validation
+    print("### Logistic Regression Cross-Validation ###")
+    model = LogisticRegressionCV(Cs=[0.1, 1, 10, 100, 1000],
+                                 cv=10,
+                                 refit=True,
+                                 random_state=42,
+                                 max_iter=500)
+    model.fit(X_train, y_train)
+    score = model.score(X_test, y_test)
+    print("Accuracy = {0:0.3f}\n".format(score))
+
+
+    # Logistic Regression
+    print("### Logistic Regression ###")
+    model = LogisticRegression(random_state=42, max_iter=500)
+
+    parameters = [{'penalty': ['none', 'l1', 'l2'],
+                   'C': [0.1, 1, 10, 100, 1000],
+                   'solver': ['saga']},
+                  {'penalty': ['none', 'l2'],
+                   'C': [0.1, 1, 10, 100, 1000],
+                   'solver': ['newton-cg', 'lbfgs', 'sag']},
+                  {'penalty': ['l1', 'l2'],
+                   'C': [0.1, 1, 10, 100, 1000],
+                   'solver': ['liblinear']}]
+
+    best = cross_validation(model, parameters, X_train, X_test, y_train, y_test)
+    score = best.score(X_test, y_test)
+    print("Accuracy = {0:0.3f}\n".format(score))
+
+
+def svm(X_train, X_test, y_train, y_test):
+
+    # Linear SVM
+    print("### Linear SVM ###")
+    model = SVC(random_state=42, kernel='linear')
+
+    parameters = [{'C': [0.01, 0.1, 1, 10, 100, 1000]}]
+
+    best = cross_validation(model, parameters, X_train, X_test, y_train, y_test)
+    score = best.score(X_test, y_test)
+    print("Accuracy = {0:0.3f}\n".format(score))
+
+
+    # SVM with RBF kernel
+    print("### SVM with RBF kernel ###")
+    model = SVC(random_state=42, kernel='rbf')
+
+    parameters = [{'C': [1, 10, 100, 1000],
+                   'gamma': ['auto', 'scale', 0.001, 0.001, 0.01, 0.1]}]
+
+    best = cross_validation(model, parameters, X_train, X_test, y_train, y_test)
+    score = best.score(X_test, y_test)
+    print("Accuracy = {0:0.3f}\n".format(score))
+
+
+def naive_bayes(X_train, X_test, y_train, y_test):
+
+    # Gaussian Naïve Bayes
+    print("### Gaussian Naïve Bayes ###")
+    model = GaussianNB()
+
+    parameters = [{'var_smoothing': [1e-10, 1e-9, 1e-8, 1e-7]}]
+
+    best = cross_validation(model, parameters, X_train.toarray(), X_test.toarray(), y_train, y_test)
+    score = best.score(X_test.toarray(), y_test)
+    print("Accuracy = {0:0.3f}\n".format(score))
+
+
+    # Multinomial Naïve Bayes
+    print("### Multinomial Naïve Bayes ###")
+    model = MultinomialNB()
+
+    parameters = [{'alpha': [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]}]
+
+    best = cross_validation(model, parameters, X_train, X_test, y_train, y_test)
+    score = best.score(X_test, y_test)
+    print("Accuracy = {0:0.3f}\n".format(score))
+
+
+def random_forest(X_train, X_test, y_train, y_test):
+
+    # Random Forest
+    print("### Random Forest ###")
+    model = RandomForestClassifier(random_state=42)
+
+    parameters = [{'n_estimators': [5, 10, 50, 100, 500, 1000],
+                   'max_depth': [5, 10, None],
+                   'max_features': [1, 2, 'auto', 'sqrt', 'log2', None],
+                   'class_weight': ['balanced', None]}]
+
+    best = cross_validation(model, parameters, X_train, X_test, y_train, y_test)
+    score = best.score(X_test, y_test)
+    print("Accuracy = {0:0.3f}\n".format(score))
+
+
+def main():
+    mr_X, mr_y = read_movie_reviews()
+    mr_X_tr, mr_X_te, mr_y_tr, mr_y_te = pre_process(mr_X, mr_y)
+
+#    cr_X, cr_y = read_customer_reviews()
+#    cr_X_tr, cr_X_te, cr_y_tr, cr_y_te = pre_process(cr_X, cr_y)
+
+#    mpqa_X, mpqa_y = read_mpqa()
+#    mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te = pre_process(mpqa_X, mpqa_y)
+
+#    logistic_regression(mr_X_tr, mr_X_te, mr_y_tr, mr_y_te)
+#    logistic_regression(cr_X_tr, cr_X_te, cr_y_tr, cr_y_te)
+#    logistic_regression(mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te)
+
+    svm(mr_X_tr, mr_X_te, mr_y_tr, mr_y_te)
+#    svm(cr_X_tr, cr_X_te, cr_y_tr, cr_y_te)
+#    svm(mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te)
+
+#    naive_bayes(mr_X_tr, mr_X_te, mr_y_tr, mr_y_te)
+#    naive_bayes(cr_X_tr, cr_X_te, cr_y_tr, cr_y_te)
+#    naive_bayes(mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te)
+
+#    random_forest(mr_X_tr, mr_X_te, mr_y_tr, mr_y_te)
+#    random_forest(cr_X_tr, cr_X_te, cr_y_tr, cr_y_te)
+#    random_forest(mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te)
+
+
+if __name__ == "__main__":
+    main()
