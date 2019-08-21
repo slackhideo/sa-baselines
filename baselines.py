@@ -2,6 +2,7 @@ import os
 import re
 import codecs
 import numpy as np
+import pandas as pd
 from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
 from sklearn.naive_bayes import MultinomialNB
@@ -164,6 +165,19 @@ def read_mpqa(data_dir='mpqa'):
     return X, y
 
 
+def read_yelp(data_dir='yelp_2015_v2_binary'):
+    data = pd.read_csv(os.path.join(os.getcwd(),
+                                    DATA_BASE_DIR,
+                                    data_dir,
+                                    'test.csv'),
+                       header=None,
+                       names=['class', 'text'])
+    X = [re.sub(r'\\n', ' ', text) for text in data['text'].values]
+    y = data['class'].values
+
+    return X, y
+
+
 def pre_process(X, y):
     bow = CountVectorizer()
     X_bow = bow.fit_transform(X)
@@ -302,27 +316,35 @@ def main():
     mr_X, mr_y = read_movie_reviews()
     mr_X_tr, mr_X_te, mr_y_tr, mr_y_te = pre_process(mr_X, mr_y)
 
-#    cr_X, cr_y = read_customer_reviews()
-#    cr_X_tr, cr_X_te, cr_y_tr, cr_y_te = pre_process(cr_X, cr_y)
+    cr_X, cr_y = read_customer_reviews()
+    cr_X_tr, cr_X_te, cr_y_tr, cr_y_te = pre_process(cr_X, cr_y)
 
-#    mpqa_X, mpqa_y = read_mpqa()
-#    mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te = pre_process(mpqa_X, mpqa_y)
+    mpqa_X, mpqa_y = read_mpqa()
+    mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te = pre_process(mpqa_X, mpqa_y)
 
-#    logistic_regression(mr_X_tr, mr_X_te, mr_y_tr, mr_y_te)
-#    logistic_regression(cr_X_tr, cr_X_te, cr_y_tr, cr_y_te)
-#    logistic_regression(mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te)
+    yelp_X, yelp_y = read_yelp()
+    yelp_X_tr, yelp_X_te, yelp_y_tr, yelp_y_te = pre_process(yelp_X, yelp_y)
+
+
+    logistic_regression(mr_X_tr, mr_X_te, mr_y_tr, mr_y_te)
+    logistic_regression(cr_X_tr, cr_X_te, cr_y_tr, cr_y_te)
+    logistic_regression(mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te)
+    logistic_regression(yelp_X_tr, yelp_X_te, yelp_y_tr, yelp_y_te)
 
     svm(mr_X_tr, mr_X_te, mr_y_tr, mr_y_te)
-#    svm(cr_X_tr, cr_X_te, cr_y_tr, cr_y_te)
-#    svm(mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te)
+    svm(cr_X_tr, cr_X_te, cr_y_tr, cr_y_te)
+    svm(mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te)
+    svm(yelp_X_tr, yelp_X_te, yelp_y_tr, yelp_y_te)
 
-#    naive_bayes(mr_X_tr, mr_X_te, mr_y_tr, mr_y_te)
-#    naive_bayes(cr_X_tr, cr_X_te, cr_y_tr, cr_y_te)
-#    naive_bayes(mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te)
+    naive_bayes(mr_X_tr, mr_X_te, mr_y_tr, mr_y_te)
+    naive_bayes(cr_X_tr, cr_X_te, cr_y_tr, cr_y_te)
+    naive_bayes(mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te)
+    naive_bayes(yelp_X_tr, yelp_X_te, yelp_y_tr, yelp_y_te)
 
-#    random_forest(mr_X_tr, mr_X_te, mr_y_tr, mr_y_te)
-#    random_forest(cr_X_tr, cr_X_te, cr_y_tr, cr_y_te)
-#    random_forest(mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te)
+    random_forest(mr_X_tr, mr_X_te, mr_y_tr, mr_y_te)
+    random_forest(cr_X_tr, cr_X_te, cr_y_tr, cr_y_te)
+    random_forest(mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te)
+    random_forest(yelp_X_tr, yelp_X_te, yelp_y_tr, yelp_y_te)
 
 
 if __name__ == "__main__":
