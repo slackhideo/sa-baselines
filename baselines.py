@@ -52,7 +52,7 @@ def read_customer_reviews(data_dir='customer_reviews'):
     negatives = []
     mixed = []
 
-    for filename in os.listdir(os.path.join(os.getcwd(), data_dir)):
+    for filename in os.listdir(os.path.join(os.getcwd(), DATA_BASE_DIR, data_dir)):
         with codecs.open(os.path.join(os.getcwd(),
                                       DATA_BASE_DIR,
                                       data_dir,
@@ -91,7 +91,7 @@ def read_mpqa(data_dir='mpqa'):
                      'doclist.xbankSubset']
 
     for doclist in doclist_files:
-        with open(os.path.join(os.getcwd(), data_dir, doclist), 'r') as opqa_files:
+        with open(os.path.join(os.getcwd(), DATA_BASE_DIR, data_dir, doclist), 'r') as opqa_files:
             for opqa_file_path in opqa_files:
                 with open(os.path.join(os.getcwd(),
                                        DATA_BASE_DIR,
@@ -165,7 +165,7 @@ def read_mpqa(data_dir='mpqa'):
     return X, y
 
 
-def read_yelp(data_dir='yelp_2015_v2_binary'):
+def read_yelp(data_dir='yelp_2015_v2_binary'): # NEED FIXING
     data = pd.read_csv(os.path.join(os.getcwd(),
                                     DATA_BASE_DIR,
                                     data_dir,
@@ -173,7 +173,7 @@ def read_yelp(data_dir='yelp_2015_v2_binary'):
                        header=None,
                        names=['class', 'text'])
     X = [re.sub(r'\\n', ' ', text) for text in data['text'].values]
-    y = data['class'].values
+    y = data['class'].values - 1 # Transforms the classes into '0' and '1'
 
     return X, y
 
@@ -184,7 +184,7 @@ def pre_process(X, y):
 
     X_train, X_test, y_train, y_test = train_test_split(X_bow,
                                                         y,
-                                                        test_size=0.2,
+                                                        test_size=0.1,
                                                         shuffle=True,
                                                         random_state=42)
 
@@ -202,7 +202,7 @@ def cross_validation(model, parameters, X_train, X_test, y_train, y_test):
     print("Grid scores:")
     print()
     means = clf.cv_results_['mean_test_score']
-    stds = clf.cv_results_['std_test_score']
+    stds  = clf.cv_results_['std_test_score']
     for mean, std, params in zip(means, stds, clf.cv_results_['params']):
         print("%0.3f (+/-%0.03f) for %r" % (mean, std * 2, params))
     print()
@@ -212,6 +212,39 @@ def cross_validation(model, parameters, X_train, X_test, y_train, y_test):
     print(classification_report(y_true, y_pred))
 
     return clf.best_estimator_
+
+
+def dataset_stats(X, y):
+    assert len(X) == len(y)
+
+    # Number of instances
+    n = len(X)
+
+    d = dict(zip(*np.unique(y, return_counts=True)))
+
+    # Number of negative and positive instances
+    n_neg = d[0]
+    n_pos = d[1]
+
+    num_words = []
+
+    for sent in X:
+        num_words.append(len(sent.split()))
+
+    # Average number of words per instance
+    w = np.mean(num_words)
+
+    bow = CountVectorizer()
+    X_bow = bow.fit_transform(X)
+
+    # Size of the vocabulary
+    v = X_bow.shape[1]
+
+    print('N = {0}, N+ = {1}, N- = {2}, w = {3:0.2f}, V = {4}'.format(n,
+                                                                      n_pos,
+                                                                      n_neg,
+                                                                      w,
+                                                                      v))
 
 
 def logistic_regression(X_train, X_test, y_train, y_test):
@@ -314,15 +347,19 @@ def random_forest(X_train, X_test, y_train, y_test):
 
 def main():
     mr_X, mr_y = read_movie_reviews()
+    dataset_stats(mr_X, mr_y)
     mr_X_tr, mr_X_te, mr_y_tr, mr_y_te = pre_process(mr_X, mr_y)
 
     cr_X, cr_y = read_customer_reviews()
+    dataset_stats(cr_X, cr_y)
     cr_X_tr, cr_X_te, cr_y_tr, cr_y_te = pre_process(cr_X, cr_y)
 
     mpqa_X, mpqa_y = read_mpqa()
+    dataset_stats(mpqa_X, mpqa_y)
     mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te = pre_process(mpqa_X, mpqa_y)
 
     yelp_X, yelp_y = read_yelp()
+    dataset_stats(yelp_X, yelp_y)
     yelp_X_tr, yelp_X_te, yelp_y_tr, yelp_y_te = pre_process(yelp_X, yelp_y)
 
 
