@@ -166,16 +166,38 @@ def read_mpqa(data_dir='mpqa'):
 
 
 def read_yelp(data_dir='yelp_2015_v2_binary'): # NEED FIXING
+
+    # Training instances
+    data = pd.read_csv(os.path.join(os.getcwd(),
+                                    DATA_BASE_DIR,
+                                    data_dir,
+                                    'train.csv'),
+                       header=None,
+                       names=['class', 'text'])
+    X_train = [re.sub(r'\\n', ' ', text) for text in data['text'].values]
+    y_train = data['class'].values - 1 # Transforms the classes into '0' and '1'
+
+    # Test instances
     data = pd.read_csv(os.path.join(os.getcwd(),
                                     DATA_BASE_DIR,
                                     data_dir,
                                     'test.csv'),
                        header=None,
                        names=['class', 'text'])
-    X = [re.sub(r'\\n', ' ', text) for text in data['text'].values]
-    y = data['class'].values - 1 # Transforms the classes into '0' and '1'
+    X_test = [re.sub(r'\\n', ' ', text) for text in data['text'].values]
+    y_test = data['class'].values - 1 # Transforms the classes into '0' and '1'
 
-    return X, y
+    X = []
+    X.extend(X_train)
+    X.extend(X_test)
+
+    bow = CountVectorizer()
+    X_bow = bow.fit_transform(X)
+
+    X_bow_train = X_bow[:len(X_train)]
+    X_bow_test  = X_bow[len(X_train):]
+
+    return X_bow_train, X_bow_test, y_train, y_test
 
 
 def pre_process(X, y):
@@ -358,9 +380,7 @@ def main():
     dataset_stats(mpqa_X, mpqa_y)
     mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te = pre_process(mpqa_X, mpqa_y)
 
-    yelp_X, yelp_y = read_yelp()
-    dataset_stats(yelp_X, yelp_y)
-    yelp_X_tr, yelp_X_te, yelp_y_tr, yelp_y_te = pre_process(yelp_X, yelp_y)
+    yelp_X_tr, yelp_X_te, yelp_y_tr, yelp_y_te = read_yelp()
 
 
     logistic_regression(mr_X_tr, mr_X_te, mr_y_tr, mr_y_te)
