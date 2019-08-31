@@ -4,7 +4,7 @@ import codecs
 import numpy as np
 import pandas as pd
 from sklearn.svm import SVC
-from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import BernoulliNB
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
@@ -165,7 +165,7 @@ def read_mpqa(data_dir='mpqa'):
     return X, y
 
 
-def read_yelp(data_dir='yelp_2015_v2_binary'): # NEED FIXING
+def read_yelp(data_dir='yelp_2015_v2_binary'):
 
     # Training instances
     data = pd.read_csv(os.path.join(os.getcwd(),
@@ -329,11 +329,11 @@ def svm(X_train, X_test, y_train, y_test):
 
 def naive_bayes(X_train, X_test, y_train, y_test):
 
-    # Gaussian Naïve Bayes
-    print("### Gaussian Naïve Bayes ###")
-    model = GaussianNB()
+    # Bernoulli Naïve Bayes
+    print("### Bernoulli Naïve Bayes ###")
+    model = BernoulliNB()
 
-    parameters = [{'var_smoothing': [1e-10, 1e-9, 1e-8, 1e-7]}]
+    parameters = [{'alpha': [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2]}]
 
     best = cross_validation(model, parameters, X_train.toarray(), X_test.toarray(), y_train, y_test)
     score = best.score(X_test.toarray(), y_test)
