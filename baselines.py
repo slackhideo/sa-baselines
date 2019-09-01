@@ -52,7 +52,9 @@ def read_customer_reviews(data_dir='customer_reviews'):
     negatives = []
     mixed = []
 
-    for filename in os.listdir(os.path.join(os.getcwd(), DATA_BASE_DIR, data_dir)):
+    for filename in sorted(os.listdir(os.path.join(os.getcwd(),
+                                                   DATA_BASE_DIR,
+                                                   data_dir))):
         with codecs.open(os.path.join(os.getcwd(),
                                       DATA_BASE_DIR,
                                       data_dir,
