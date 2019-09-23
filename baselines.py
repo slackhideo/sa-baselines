@@ -4,6 +4,7 @@ import codecs
 import numpy as np
 import pandas as pd
 from sklearn.svm import SVC
+from stop_words import read_stop_words
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.model_selection import GridSearchCV
@@ -203,7 +204,9 @@ def read_yelp(data_dir='yelp_2015_v2_binary'):
 
 
 def pre_process(X, y):
-    bow = CountVectorizer()
+    stop_words = read_stop_words('stop_words_minimal.txt')
+
+    bow = CountVectorizer(stop_words=stop_words)
     X_bow = bow.fit_transform(X)
 
     X_train, X_test, y_train, y_test = train_test_split(X_bow,
