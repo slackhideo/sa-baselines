@@ -174,7 +174,7 @@ def read_yelp(data_dir='yelp_2015_v2_binary'):
     data = pd.read_csv(os.path.join(os.getcwd(),
                                     DATA_BASE_DIR,
                                     data_dir,
-                                    'train.csv'),
+                                    'train_2perc.csv'),
                        header=None,
                        names=['class', 'text'])
     X_train = [re.sub(r'\\n', ' ', text) for text in data['text'].values]
@@ -184,7 +184,7 @@ def read_yelp(data_dir='yelp_2015_v2_binary'):
     data = pd.read_csv(os.path.join(os.getcwd(),
                                     DATA_BASE_DIR,
                                     data_dir,
-                                    'test.csv'),
+                                    'test_2perc.csv'),
                        header=None,
                        names=['class', 'text'])
     X_test = [re.sub(r'\\n', ' ', text) for text in data['text'].values]
