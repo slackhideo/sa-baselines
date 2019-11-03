@@ -3,6 +3,7 @@ import re
 import codecs
 import numpy as np
 import pandas as pd
+#import contractions
 from sklearn.svm import SVC
 from stop_words import read_stop_words
 from sklearn.naive_bayes import BernoulliNB
@@ -203,6 +204,15 @@ def read_yelp(data_dir='yelp_2015_v2_binary'):
     return X_bow_train, X_bow_test, y_train, y_test
 
 
+#def fix_contractions(X):
+#    fixed = []
+#
+#    for l in X:
+#        fixed.append(contractions.fix(l))
+#
+#    return fixed
+
+
 def pre_process(X, y):
 #    stop_words = read_stop_words('stop_words_minimal.txt')
 
@@ -375,14 +385,17 @@ def random_forest(X_train, X_test, y_train, y_test):
 
 def main():
     mr_X, mr_y = read_movie_reviews()
+#    mr_X = fix_contractions(mr_X)
     dataset_stats(mr_X, mr_y)
     mr_X_tr, mr_X_te, mr_y_tr, mr_y_te = pre_process(mr_X, mr_y)
 
     cr_X, cr_y = read_customer_reviews()
+#    cr_X = fix_contractions(cr_X)
     dataset_stats(cr_X, cr_y)
     cr_X_tr, cr_X_te, cr_y_tr, cr_y_te = pre_process(cr_X, cr_y)
 
     mpqa_X, mpqa_y = read_mpqa()
+#    mpqa_X = fix_contractions(mpqa_X)
     dataset_stats(mpqa_X, mpqa_y)
     mpqa_X_tr, mpqa_X_te, mpqa_y_tr, mpqa_y_te = pre_process(mpqa_X, mpqa_y)
 
