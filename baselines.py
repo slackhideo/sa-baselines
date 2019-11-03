@@ -289,23 +289,23 @@ def logistic_regression(X_train, X_test, y_train, y_test):
     print("Accuracy = {0:0.3f}\n".format(score))
 
 
-    # Logistic Regression
-    print("### Logistic Regression ###")
-    model = LogisticRegression(random_state=42, max_iter=500)
-
-    parameters = [{'penalty': ['none', 'l1', 'l2'],
-                   'C': [0.1, 1, 10, 100, 1000],
-                   'solver': ['saga']},
-                  {'penalty': ['none', 'l2'],
-                   'C': [0.1, 1, 10, 100, 1000],
-                   'solver': ['newton-cg', 'lbfgs', 'sag']},
-                  {'penalty': ['l1', 'l2'],
-                   'C': [0.1, 1, 10, 100, 1000],
-                   'solver': ['liblinear']}]
-
-    best = cross_validation(model, parameters, X_train, X_test, y_train, y_test)
-    score = best.score(X_test, y_test)
-    print("Accuracy = {0:0.3f}\n".format(score))
+#    # Logistic Regression
+#    print("### Logistic Regression ###")
+#    model = LogisticRegression(random_state=42, max_iter=500)
+#
+#    parameters = [{'penalty': ['none', 'l1', 'l2'],
+#                   'C': [0.1, 1, 10, 100, 1000],
+#                   'solver': ['saga']},
+#                  {'penalty': ['none', 'l2'],
+#                   'C': [0.1, 1, 10, 100, 1000],
+#                   'solver': ['newton-cg', 'lbfgs', 'sag']},
+#                  {'penalty': ['l1', 'l2'],
+#                   'C': [0.1, 1, 10, 100, 1000],
+#                   'solver': ['liblinear']}]
+#
+#    best = cross_validation(model, parameters, X_train, X_test, y_train, y_test)
+#    score = best.score(X_test, y_test)
+#    print("Accuracy = {0:0.3f}\n".format(score))
 
 
 def svm(X_train, X_test, y_train, y_test):
