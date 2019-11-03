@@ -204,9 +204,10 @@ def read_yelp(data_dir='yelp_2015_v2_binary'):
 
 
 def pre_process(X, y):
-    stop_words = read_stop_words('stop_words_minimal.txt')
+#    stop_words = read_stop_words('stop_words_minimal.txt')
 
-    bow = CountVectorizer(stop_words=stop_words)
+#    bow = CountVectorizer(stop_words=stop_words)
+    bow = CountVectorizer(stop_words=None)
     X_bow = bow.fit_transform(X)
 
     X_train, X_test, y_train, y_test = train_test_split(X_bow,
