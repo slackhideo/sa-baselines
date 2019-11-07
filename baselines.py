@@ -20,8 +20,11 @@ from sklearn.feature_extraction.text import CountVectorizer
 DATA_BASE_DIR = 'datasets'
 
 
+script_base_dir = os.path.dirname(os.path.realpath(__file__))
+
+
 def read_movie_reviews(data_dir='movie_reviews'):
-    with codecs.open(os.path.join(os.getcwd(),
+    with codecs.open(os.path.join(script_base_dir,
                                   DATA_BASE_DIR,
                                   data_dir,
                                   'mr-polarity.neg'),
@@ -29,7 +32,7 @@ def read_movie_reviews(data_dir='movie_reviews'):
                      encoding='utf-8',
                      errors='ignore') as f:
         Xn_text = f.read().splitlines()
-    with codecs.open(os.path.join(os.getcwd(),
+    with codecs.open(os.path.join(script_base_dir,
                                   DATA_BASE_DIR,
                                   data_dir,
                                   'mr-polarity.pos'),
@@ -54,10 +57,10 @@ def read_customer_reviews(data_dir='customer_reviews'):
     negatives = []
     mixed = []
 
-    for filename in sorted(os.listdir(os.path.join(os.getcwd(),
+    for filename in sorted(os.listdir(os.path.join(script_base_dir,
                                                    DATA_BASE_DIR,
                                                    data_dir))):
-        with codecs.open(os.path.join(os.getcwd(),
+        with codecs.open(os.path.join(script_base_dir,
                                       DATA_BASE_DIR,
                                       data_dir,
                                       filename),
@@ -95,16 +98,16 @@ def read_mpqa(data_dir='mpqa'):
                      'doclist.xbankSubset']
 
     for doclist in doclist_files:
-        with open(os.path.join(os.getcwd(), DATA_BASE_DIR, data_dir, doclist), 'r') as opqa_files:
+        with open(os.path.join(script_base_dir, DATA_BASE_DIR, data_dir, doclist), 'r') as opqa_files:
             for opqa_file_path in opqa_files:
-                with open(os.path.join(os.getcwd(),
+                with open(os.path.join(script_base_dir,
                                        DATA_BASE_DIR,
                                        data_dir,
                                        'man_anns',
                                        opqa_file_path.strip(),
                                        'gateman.mpqa.lre.2.0'),
                           'r') as annotation_file:
-                    with codecs.open(os.path.join(os.getcwd(),
+                    with codecs.open(os.path.join(script_base_dir,
                                                   DATA_BASE_DIR,
                                                   data_dir,
                                                   'docs',
@@ -172,7 +175,7 @@ def read_mpqa(data_dir='mpqa'):
 def read_yelp(data_dir='yelp_2015_v2_binary'):
 
     # Training instances
-    data = pd.read_csv(os.path.join(os.getcwd(),
+    data = pd.read_csv(os.path.join(script_base_dir,
                                     DATA_BASE_DIR,
                                     data_dir,
                                     'train_2perc.csv'),
@@ -182,7 +185,7 @@ def read_yelp(data_dir='yelp_2015_v2_binary'):
     y_train = data['class'].values - 1 # Transforms the classes into '0' and '1'
 
     # Test instances
-    data = pd.read_csv(os.path.join(os.getcwd(),
+    data = pd.read_csv(os.path.join(script_base_dir,
                                     DATA_BASE_DIR,
                                     data_dir,
                                     'test_2perc.csv'),
