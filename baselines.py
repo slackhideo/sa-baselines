@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 #import contractions
 from sklearn.svm import SVC
-from stop_words import read_stop_words
+#from stop_words import read_stop_words
 from sklearn.naive_bayes import BernoulliNB
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.model_selection import GridSearchCV
